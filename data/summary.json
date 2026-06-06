@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-06-06T14:58:52.156569+00:00",
-  "total": 1000,
+  "generated_at": "2026-06-06T15:45:13.378399+00:00",
+  "total": 1316,
   "by_year": {
     "Unknown": 148,
-    "2026": 86,
-    "2025": 185,
+    "2026": 404,
+    "2025": 183,
     "2024": 98,
     "2023": 122,
     "2022": 55,
@@ -19,12 +19,12 @@
     "2013": 9
   },
   "by_venue": {
-    "CVPR": 460,
-    "arXiv cs.CV": 159,
+    "CVPR": 783,
+    "arXiv cs.CV": 153,
     "ICCV": 152,
     "CVPR/ICCV/ECCV": 148,
     "ECCV": 16,
-    "arXiv (Cornell University)": 15,
+    "arXiv (Cornell University)": 14,
     "OpenAlex CV-related": 10,
     "Proceedings of the AAAI Conference on Artificial Intelligence": 9,
     "IEEE Transactions on Image Processing": 3,
@@ -54,14 +54,19 @@
     "IEEE Signal Processing Letters": 1
   },
   "by_tier": {
-    "strict_moe": 242,
-    "adjacent_expert_routing": 758
+    "strict_moe": 310,
+    "adjacent_expert_routing": 1006
   },
   "sources": [
     {
       "name": "choucisan/CVpaper",
       "url": "https://github.com/choucisan/CVpaper",
       "coverage": "CVPR 2013-2025, ICCV 2013-2025, ECCV 2018-2024"
+    },
+    {
+      "name": "CVPR2026 hongsong miner",
+      "url": "https://hongsong-wang.github.io/CVPR2026/",
+      "coverage": "Local mined CVPR 2026 titles, abstracts, and links"
     },
     {
       "name": "arXiv cs.CV API",
@@ -73,5 +78,16 @@
       "url": "https://openalex.org/",
       "coverage": "Conservative CV-filtered strict MoE keyword expansion"
     }
-  ]
+  ],
+  "translation": {
+    "target": "zh-CN",
+    "engine": "Helsinki-NLP/opus-mt-en-zh",
+    "device": "cuda",
+    "translated_papers": 1316,
+    "missing_translation_papers": 0,
+    "postprocess": {
+      "term_replacements": 39,
+      "changed_fields": 13
+    }
+  }
 }

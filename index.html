@@ -1,44 +1,53 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Vision MoE Paper Atlas</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="assets/style.css">
   </head>
   <body>
     <header class="topbar">
-      <div>
+      <div class="brand">
         <p class="eyebrow">Computer Vision Literature</p>
         <h1>Vision MoE Paper Atlas</h1>
+        <p class="subtitle">CV 领域 MoE、routing、gating、expert-system 论文检索与中英双语阅读器</p>
       </div>
-      <a class="source-link" href="https://github.com/choucisan/CVpaper" target="_blank" rel="noreferrer">CVpaper Source</a>
+      <div class="header-actions">
+        <a class="source-link" href="https://github.com/wei10-pc/moe-paper-atlas" target="_blank" rel="noreferrer">GitHub</a>
+        <a class="source-link ghost" href="https://github.com/choucisan/CVpaper" target="_blank" rel="noreferrer">CVpaper</a>
+      </div>
     </header>
 
     <main class="shell">
-      <section class="stats" aria-label="Dataset statistics">
+      <section class="overview" aria-label="Dataset statistics">
         <div class="stat">
           <span class="stat-label">Total</span>
           <strong id="statTotal">0</strong>
+          <small>收录论文</small>
         </div>
         <div class="stat">
           <span class="stat-label">Strict MoE</span>
           <strong id="statStrict">0</strong>
+          <small>显式 MoE / mixture-of-experts</small>
         </div>
         <div class="stat">
           <span class="stat-label">Expert / Routing</span>
           <strong id="statAdjacent">0</strong>
+          <small>专家、门控、路由相邻机制</small>
         </div>
-        <div class="stat">
+        <div class="stat accent-stat">
           <span class="stat-label">Showing</span>
           <strong id="statShowing">0</strong>
+          <small>当前筛选结果</small>
         </div>
       </section>
 
-      <section class="toolbar" aria-label="Paper filters">
+      <section class="control-panel" aria-label="Paper filters">
         <label class="search">
-          <span>Search</span>
-          <input id="searchInput" type="search" placeholder="title, abstract, author, venue">
+          <span>Search / 检索</span>
+          <input id="searchInput" type="search" placeholder="Life-IQA, point cloud, distortion, 路由, 专家">
         </label>
         <label>
           <span>Tier</span>
@@ -68,30 +77,49 @@
         </label>
       </section>
 
-      <section class="source-note" aria-label="Source coverage">
+      <section class="meta-strip" aria-label="Source coverage">
         <span id="generatedAt">Generated from local data bundle.</span>
-        <span>External expansion is restricted to CV-related arXiv/OpenAlex results.</span>
+        <span>中英双语字段来自静态 JSON，页面不依赖运行时翻译。</span>
+        <span>CVPR2026 已接入 hongsong miner 本地挖掘结果。</span>
       </section>
+
+      <nav id="yearNav" class="year-nav" aria-label="Year quick navigation"></nav>
 
       <section id="paperGroups" class="paper-groups" aria-live="polite"></section>
 
       <template id="paperCardTemplate">
-        <article class="paper-card">
-          <div class="paper-meta">
+        <article class="paper-entry">
+          <aside class="paper-side">
+            <span class="rank"></span>
             <span class="badge tier-badge"></span>
             <span class="venue-badge"></span>
             <span class="source-badge"></span>
+            <a class="paper-link" target="_blank" rel="noreferrer">PDF / Link</a>
+          </aside>
+          <div class="paper-body">
+            <header class="paper-title-block">
+              <h3 class="en-title"></h3>
+              <p class="zh-title"></p>
+              <p class="authors"></p>
+            </header>
+            <div class="abstract-grid">
+              <section class="abstract-panel">
+                <h4>Original Abstract</h4>
+                <p class="abstract original"></p>
+              </section>
+              <section class="abstract-panel zh-panel">
+                <h4>中文翻译</h4>
+                <p class="abstract translated"></p>
+              </section>
+            </div>
+            <div class="tag-row"></div>
           </div>
-          <h3><a target="_blank" rel="noreferrer"></a></h3>
-          <p class="authors"></p>
-          <p class="abstract"></p>
-          <div class="tag-row"></div>
         </article>
       </template>
     </main>
 
     <footer class="footer">
-      <span>Data: choucisan/CVpaper, arXiv cs.CV API, OpenAlex.</span>
+      <span>Data: choucisan/CVpaper, CVPR2026 hongsong miner, arXiv cs.CV API, OpenAlex.</span>
       <span>Built for CV MoE, routing, and expert-system literature scouting.</span>
     </footer>
 

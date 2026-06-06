@@ -26,6 +26,7 @@ MAIN_CSV = CVPAPER_ROOT / "cv_paper.csv"
 HTML_DIR = CVPAPER_ROOT / "html"
 OUT_JSON = ROOT / "data" / "papers.json"
 OUT_SUMMARY = ROOT / "data" / "summary.json"
+CVPR2026_JSONL = CLIP_ROOT / "MoE-PCQA" / "external" / "cvpr2026_moe" / "cvpr_papers.jsonl"
 
 STRICT_PATTERNS = [
     r"\bmoe\b",
@@ -135,7 +136,12 @@ def normalize_space(text: str) -> str:
 
 
 def clean_text(text: str) -> str:
-    return normalize_space(html.unescape(str(text or "")).replace("\u00a0", " "))
+    text = html.unescape(str(text or "")).replace("\u00a0", " ")
+    text = re.sub(r"\\underline\s*([A-Za-z])\s+([A-Za-z]+)", r"\1\2", text)
+    text = re.sub(r"\\(?:textbf|textit|emph|texttt|mathbf)\s*\{([^{}]*)\}", r"\1", text)
+    text = re.sub(r"\\(?:cite|coloredcite|ref|label|href)\s*\{[^{}]*\}", " ", text)
+    text = text.replace("\\", " ")
+    return normalize_space(text)
 
 
 def tokenize(text: str) -> list[str]:
@@ -351,6 +357,54 @@ def build_from_cvpaper(link_records: list[dict]) -> list[dict]:
             "visual_evidence_score": visual_evidence_score(title, abstract),
         })
         seen_titles.add(title.lower())
+    return papers
+
+
+def build_from_cvpr2026_jsonl(existing_titles: set[str]) -> list[dict]:
+    if not CVPR2026_JSONL.exists():
+        return []
+
+    papers = []
+    with CVPR2026_JSONL.open("r", encoding="utf-8") as f:
+        for line in f:
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            title = clean_text(row.get("title", ""))
+            abstract = clean_text(row.get("abstract", ""))
+            if not title or title.lower() in existing_titles:
+                continue
+
+            tier, tags = classify_relevance(title, abstract)
+            if not tier and row.get("true_moe"):
+                tier = "strict_moe"
+                tags = ["true_moe"]
+            if not tier:
+                continue
+
+            links = row.get("links") or []
+            paper_url = next((url for url in links if "openaccess.thecvf.com" in url and "_paper.pdf" in url), "")
+            url = paper_url or (links[0] if links else scholar_url(title))
+            merged_tags = sorted(set(tags) | set(row.get("tags") or []))
+
+            papers.append({
+                "id": f"cvpr2026-{clean_text(row.get('paper_id', str(len(papers))))}",
+                "title": title,
+                "authors": clean_text(row.get("authors", "")),
+                "abstract": abstract,
+                "venue": "CVPR",
+                "year": 2026,
+                "url": url,
+                "source": "CVPR2026 hongsong miner",
+                "tier": tier,
+                "tags": merged_tags,
+                "link_confidence": 1.0 if paper_url else 0.7,
+                "cv_domain_score": cv_domain_score(title, abstract),
+                "strong_cv_domain_score": strong_cv_domain_score(title, abstract),
+                "visual_evidence_score": visual_evidence_score(title, abstract),
+                "paper_id": clean_text(row.get("paper_id", "")),
+            })
+            existing_titles.add(title.lower())
     return papers
 
 
@@ -587,6 +641,11 @@ def summarize(papers: list[dict]) -> dict:
                 "coverage": "CVPR 2013-2025, ICCV 2013-2025, ECCV 2018-2024",
             },
             {
+                "name": "CVPR2026 hongsong miner",
+                "url": "https://hongsong-wang.github.io/CVPR2026/",
+                "coverage": "Local mined CVPR 2026 titles, abstracts, and links",
+            },
+            {
                 "name": "arXiv cs.CV API",
                 "url": "https://export.arxiv.org/api/query",
                 "coverage": "CV-only keyword expansion",
@@ -608,6 +667,7 @@ def main() -> None:
     papers = build_from_cvpaper(link_records)
     existing_titles = {p["title"].lower() for p in papers}
 
+    papers.extend(build_from_cvpr2026_jsonl(existing_titles))
     papers.extend(fetch_arxiv_extras(existing_titles))
     papers.extend(fetch_openalex_extras(existing_titles))
     papers.extend(add_known_recent_cv_extras(existing_titles))
