@@ -12,11 +12,14 @@ const els = {
   adjacent: document.getElementById("statAdjacent"),
   showing: document.getElementById("statShowing"),
   generatedAt: document.getElementById("generatedAt"),
+  resultTitle: document.getElementById("resultTitle"),
+  activeSummary: document.getElementById("activeSummary"),
   search: document.getElementById("searchInput"),
   tier: document.getElementById("tierFilter"),
   year: document.getElementById("yearFilter"),
   venue: document.getElementById("venueFilter"),
   source: document.getElementById("sourceFilter"),
+  clear: document.getElementById("clearFilters"),
   yearNav: document.getElementById("yearNav"),
   groups: document.getElementById("paperGroups"),
   template: document.getElementById("paperCardTemplate"),
@@ -119,12 +122,27 @@ function makeTextElement(tag, className, text) {
   return node;
 }
 
+function summarizeFilters(filteredCount) {
+  const active = [];
+  if (state.query) active.push(`"${state.query}"`);
+  if (state.tier !== "all") active.push(tierLabel(state.tier));
+  if (state.year !== "all") active.push(state.year);
+  if (state.venue !== "all") active.push(state.venue);
+  if (state.source !== "all") active.push(state.source);
+
+  els.resultTitle.textContent = active.length ? "Filtered Papers" : "All Vision MoE Papers";
+  els.activeSummary.textContent = active.length
+    ? `${formatNumber(filteredCount)} results · ${active.join(" · ")}`
+    : `${formatNumber(filteredCount)} papers · all sources`;
+}
+
 function renderYearNav(years, byYear) {
   els.yearNav.innerHTML = "";
   years.forEach((year) => {
     const link = document.createElement("a");
     link.href = `#${safeId(year)}`;
-    link.textContent = `${year} (${formatNumber(byYear.get(year).length)})`;
+    link.textContent = `${year}`;
+    link.dataset.count = formatNumber(byYear.get(year).length);
     els.yearNav.appendChild(link);
   });
 }
@@ -144,7 +162,7 @@ function renderPaper(paper, index) {
   const translated = node.querySelector(".abstract.translated");
   const tags = node.querySelector(".tag-row");
 
-  rank.textContent = `#${index}`;
+  rank.textContent = String(index).padStart(2, "0");
   tier.textContent = tierLabel(paper.tier);
   if (paper.tier !== "strict_moe") tier.classList.add("adjacent");
   venue.textContent = `${paper.venue || "Unknown venue"} · ${yearLabel(paper.year)}`;
@@ -169,6 +187,7 @@ function render() {
   const filtered = papers.filter(passesFilters);
   els.showing.textContent = formatNumber(filtered.length);
   els.groups.innerHTML = "";
+  summarizeFilters(filtered.length);
 
   if (!filtered.length) {
     els.yearNav.innerHTML = "";
@@ -247,6 +266,24 @@ function updateStats() {
   }
 }
 
+function syncControls() {
+  els.search.value = state.query;
+  els.tier.value = state.tier;
+  els.year.value = state.year;
+  els.venue.value = state.venue;
+  els.source.value = state.source;
+}
+
+function resetFilters() {
+  state.query = "";
+  state.tier = "all";
+  state.year = "all";
+  state.venue = "all";
+  state.source = "all";
+  syncControls();
+  render();
+}
+
 function bindEvents() {
   els.search.addEventListener("input", (event) => {
     state.query = normalized(event.target.value.trim());
@@ -267,6 +304,14 @@ function bindEvents() {
   els.source.addEventListener("change", (event) => {
     state.source = event.target.value;
     render();
+  });
+  els.clear.addEventListener("click", resetFilters);
+  document.querySelectorAll("[data-query]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.query = normalized(button.dataset.query || "");
+      els.search.value = button.dataset.query || "";
+      render();
+    });
   });
 }
 

@@ -8,119 +8,143 @@
     <link rel="stylesheet" href="assets/style.css">
   </head>
   <body>
-    <header class="topbar">
-      <div class="brand">
-        <p class="eyebrow">Computer Vision Literature</p>
-        <h1>Vision MoE Paper Atlas</h1>
-        <p class="subtitle">CV 领域 MoE、routing、gating、expert-system 论文检索与中英双语阅读器</p>
-      </div>
-      <div class="header-actions">
-        <a class="source-link" href="https://github.com/wei10-pc/moe-paper-atlas" target="_blank" rel="noreferrer">GitHub</a>
-        <a class="source-link ghost" href="https://github.com/choucisan/CVpaper" target="_blank" rel="noreferrer">CVpaper</a>
+    <header class="masthead">
+      <div class="masthead-inner">
+        <div class="brand-mark">VM</div>
+        <div class="brand-copy">
+          <p class="eyebrow">Computer Vision MoE Literature</p>
+          <h1>Vision MoE Paper Atlas</h1>
+          <p class="subtitle">中英双语论文阅读工作台：MoE、routing、gating、expert system、PCQA/IQA 相关机制。</p>
+        </div>
+        <div class="header-actions">
+          <a href="https://github.com/wei10-pc/moe-paper-atlas" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="https://github.com/choucisan/CVpaper" target="_blank" rel="noreferrer">CVpaper</a>
+        </div>
       </div>
     </header>
 
-    <main class="shell">
-      <section class="overview" aria-label="Dataset statistics">
-        <div class="stat">
-          <span class="stat-label">Total</span>
-          <strong id="statTotal">0</strong>
-          <small>收录论文</small>
+    <main class="workspace">
+      <aside class="control-rail" aria-label="Search and filters">
+        <section class="rail-card search-card">
+          <label class="field search-field">
+            <span>Search / 检索</span>
+            <input id="searchInput" type="search" placeholder="Life-IQA, point cloud, distortion, 专家, 路由">
+          </label>
+          <div class="chip-row" aria-label="Quick search">
+            <button type="button" data-query="Life-IQA">Life-IQA</button>
+            <button type="button" data-query="point cloud">Point Cloud</button>
+            <button type="button" data-query="distortion">Distortion</button>
+            <button type="button" data-query="routing">Routing</button>
+          </div>
+        </section>
+
+        <section class="rail-card stat-grid" aria-label="Dataset statistics">
+          <div>
+            <span>Total</span>
+            <strong id="statTotal">0</strong>
+          </div>
+          <div>
+            <span>Strict MoE</span>
+            <strong id="statStrict">0</strong>
+          </div>
+          <div>
+            <span>Routing</span>
+            <strong id="statAdjacent">0</strong>
+          </div>
+          <div class="showing-stat">
+            <span>Showing</span>
+            <strong id="statShowing">0</strong>
+          </div>
+        </section>
+
+        <section class="rail-card filters">
+          <label class="field">
+            <span>Tier</span>
+            <select id="tierFilter">
+              <option value="all">All</option>
+              <option value="strict_moe">Strict MoE</option>
+              <option value="adjacent_expert_routing">Expert / routing adjacent</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Year</span>
+            <select id="yearFilter">
+              <option value="all">All years</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Venue</span>
+            <select id="venueFilter">
+              <option value="all">All venues</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Source</span>
+            <select id="sourceFilter">
+              <option value="all">All sources</option>
+            </select>
+          </label>
+          <button id="clearFilters" class="clear-btn" type="button">Clear filters</button>
+        </section>
+
+        <section class="rail-card years-card">
+          <div class="rail-title">
+            <span>Years</span>
+            <small>jump</small>
+          </div>
+          <nav id="yearNav" class="year-nav" aria-label="Year quick navigation"></nav>
+        </section>
+      </aside>
+
+      <section class="reader-pane">
+        <div class="reader-toolbar">
+          <div>
+            <p id="generatedAt" class="generated">Generated from local data bundle.</p>
+            <h2 id="resultTitle">All Vision MoE Papers</h2>
+          </div>
+          <p id="activeSummary" class="active-summary">Ready.</p>
         </div>
-        <div class="stat">
-          <span class="stat-label">Strict MoE</span>
-          <strong id="statStrict">0</strong>
-          <small>显式 MoE / mixture-of-experts</small>
-        </div>
-        <div class="stat">
-          <span class="stat-label">Expert / Routing</span>
-          <strong id="statAdjacent">0</strong>
-          <small>专家、门控、路由相邻机制</small>
-        </div>
-        <div class="stat accent-stat">
-          <span class="stat-label">Showing</span>
-          <strong id="statShowing">0</strong>
-          <small>当前筛选结果</small>
-        </div>
+
+        <section id="paperGroups" class="paper-groups" aria-live="polite"></section>
       </section>
-
-      <section class="control-panel" aria-label="Paper filters">
-        <label class="search">
-          <span>Search / 检索</span>
-          <input id="searchInput" type="search" placeholder="Life-IQA, point cloud, distortion, 路由, 专家">
-        </label>
-        <label>
-          <span>Tier</span>
-          <select id="tierFilter">
-            <option value="all">All</option>
-            <option value="strict_moe">Strict MoE</option>
-            <option value="adjacent_expert_routing">Expert / routing adjacent</option>
-          </select>
-        </label>
-        <label>
-          <span>Year</span>
-          <select id="yearFilter">
-            <option value="all">All years</option>
-          </select>
-        </label>
-        <label>
-          <span>Venue</span>
-          <select id="venueFilter">
-            <option value="all">All venues</option>
-          </select>
-        </label>
-        <label>
-          <span>Source</span>
-          <select id="sourceFilter">
-            <option value="all">All sources</option>
-          </select>
-        </label>
-      </section>
-
-      <section class="meta-strip" aria-label="Source coverage">
-        <span id="generatedAt">Generated from local data bundle.</span>
-        <span>中英双语字段来自静态 JSON，页面不依赖运行时翻译。</span>
-        <span>CVPR2026 已接入 hongsong miner 本地挖掘结果。</span>
-      </section>
-
-      <nav id="yearNav" class="year-nav" aria-label="Year quick navigation"></nav>
-
-      <section id="paperGroups" class="paper-groups" aria-live="polite"></section>
 
       <template id="paperCardTemplate">
         <article class="paper-entry">
-          <aside class="paper-side">
-            <span class="rank"></span>
-            <span class="badge tier-badge"></span>
-            <span class="venue-badge"></span>
-            <span class="source-badge"></span>
-            <a class="paper-link" target="_blank" rel="noreferrer">PDF / Link</a>
-          </aside>
-          <div class="paper-body">
-            <header class="paper-title-block">
+          <header class="paper-head">
+            <div class="paper-index">
+              <span class="rank"></span>
+              <span class="badge tier-badge"></span>
+            </div>
+            <div class="paper-title-block">
+              <div class="paper-meta">
+                <span class="venue-badge"></span>
+                <span class="source-badge"></span>
+              </div>
               <h3 class="en-title"></h3>
               <p class="zh-title"></p>
               <p class="authors"></p>
-            </header>
-            <div class="abstract-grid">
-              <section class="abstract-panel">
-                <h4>Original Abstract</h4>
-                <p class="abstract original"></p>
-              </section>
-              <section class="abstract-panel zh-panel">
-                <h4>中文翻译</h4>
-                <p class="abstract translated"></p>
-              </section>
             </div>
-            <div class="tag-row"></div>
+            <a class="paper-link" target="_blank" rel="noreferrer">PDF / Link</a>
+          </header>
+
+          <div class="abstract-grid">
+            <section class="abstract-panel original-panel">
+              <h4>Original Abstract</h4>
+              <p class="abstract original"></p>
+            </section>
+            <section class="abstract-panel zh-panel">
+              <h4>中文翻译</h4>
+              <p class="abstract translated"></p>
+            </section>
           </div>
+          <div class="tag-row"></div>
         </article>
       </template>
     </main>
 
     <footer class="footer">
       <span>Data: choucisan/CVpaper, CVPR2026 hongsong miner, arXiv cs.CV API, OpenAlex.</span>
-      <span>Built for CV MoE, routing, and expert-system literature scouting.</span>
+      <span>Static bilingual reader for CV MoE literature scouting.</span>
     </footer>
 
     <script src="assets/app.js"></script>
