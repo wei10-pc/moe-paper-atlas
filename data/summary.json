@@ -1,0 +1,77 @@
+{
+  "generated_at": "2026-06-06T14:58:52.156569+00:00",
+  "total": 1000,
+  "by_year": {
+    "Unknown": 148,
+    "2026": 86,
+    "2025": 185,
+    "2024": 98,
+    "2023": 122,
+    "2022": 55,
+    "2021": 87,
+    "2020": 42,
+    "2019": 68,
+    "2018": 47,
+    "2017": 26,
+    "2016": 8,
+    "2015": 13,
+    "2014": 6,
+    "2013": 9
+  },
+  "by_venue": {
+    "CVPR": 460,
+    "arXiv cs.CV": 159,
+    "ICCV": 152,
+    "CVPR/ICCV/ECCV": 148,
+    "ECCV": 16,
+    "arXiv (Cornell University)": 15,
+    "OpenAlex CV-related": 10,
+    "Proceedings of the AAAI Conference on Artificial Intelligence": 9,
+    "IEEE Transactions on Image Processing": 3,
+    "ArXiv.org": 2,
+    "IEEE Transactions on Circuits and Systems for Video Technology": 2,
+    "Neurocomputing": 2,
+    "IEEE Access": 2,
+    "WACV": 1,
+    "Open MIND": 1,
+    "bioRxiv (Cold Spring Harbor Laboratory)": 1,
+    "IEEE Transactions on Geoscience and Remote Sensing": 1,
+    "IEEE Open Journal of Signal Processing": 1,
+    "Frontiers in Plant Science": 1,
+    "Medical Image Analysis": 1,
+    "Electronics": 1,
+    "Communications in computer and information science": 1,
+    "Lecture notes in computer science": 1,
+    "Journal of Pathology Informatics": 1,
+    "2022 IEEE Intelligent Vehicles Symposium (IV)": 1,
+    "2022 IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)": 1,
+    "2022 IEEE International Conference on Multimedia and Expo (ICME)": 1,
+    "IEEE Transactions on Biomedical Engineering": 1,
+    "Journal of Petroleum Science and Engineering": 1,
+    "Applied Intelligence": 1,
+    "IEEE Transactions on Multimedia": 1,
+    "Journal of Medical Signals & Sensors": 1,
+    "IEEE Signal Processing Letters": 1
+  },
+  "by_tier": {
+    "strict_moe": 242,
+    "adjacent_expert_routing": 758
+  },
+  "sources": [
+    {
+      "name": "choucisan/CVpaper",
+      "url": "https://github.com/choucisan/CVpaper",
+      "coverage": "CVPR 2013-2025, ICCV 2013-2025, ECCV 2018-2024"
+    },
+    {
+      "name": "arXiv cs.CV API",
+      "url": "https://export.arxiv.org/api/query",
+      "coverage": "CV-only keyword expansion"
+    },
+    {
+      "name": "OpenAlex",
+      "url": "https://openalex.org/",
+      "coverage": "Conservative CV-filtered strict MoE keyword expansion"
+    }
+  ]
+}

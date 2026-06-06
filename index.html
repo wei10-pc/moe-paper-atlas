@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Vision MoE Paper Atlas</title>
+    <link rel="stylesheet" href="assets/style.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Computer Vision Literature</p>
+        <h1>Vision MoE Paper Atlas</h1>
+      </div>
+      <a class="source-link" href="https://github.com/choucisan/CVpaper" target="_blank" rel="noreferrer">CVpaper Source</a>
+    </header>
+
+    <main class="shell">
+      <section class="stats" aria-label="Dataset statistics">
+        <div class="stat">
+          <span class="stat-label">Total</span>
+          <strong id="statTotal">0</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Strict MoE</span>
+          <strong id="statStrict">0</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Expert / Routing</span>
+          <strong id="statAdjacent">0</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Showing</span>
+          <strong id="statShowing">0</strong>
+        </div>
+      </section>
+
+      <section class="toolbar" aria-label="Paper filters">
+        <label class="search">
+          <span>Search</span>
+          <input id="searchInput" type="search" placeholder="title, abstract, author, venue">
+        </label>
+        <label>
+          <span>Tier</span>
+          <select id="tierFilter">
+            <option value="all">All</option>
+            <option value="strict_moe">Strict MoE</option>
+            <option value="adjacent_expert_routing">Expert / routing adjacent</option>
+          </select>
+        </label>
+        <label>
+          <span>Year</span>
+          <select id="yearFilter">
+            <option value="all">All years</option>
+          </select>
+        </label>
+        <label>
+          <span>Venue</span>
+          <select id="venueFilter">
+            <option value="all">All venues</option>
+          </select>
+        </label>
+        <label>
+          <span>Source</span>
+          <select id="sourceFilter">
+            <option value="all">All sources</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="source-note" aria-label="Source coverage">
+        <span id="generatedAt">Generated from local data bundle.</span>
+        <span>External expansion is restricted to CV-related arXiv/OpenAlex results.</span>
+      </section>
+
+      <section id="paperGroups" class="paper-groups" aria-live="polite"></section>
+
+      <template id="paperCardTemplate">
+        <article class="paper-card">
+          <div class="paper-meta">
+            <span class="badge tier-badge"></span>
+            <span class="venue-badge"></span>
+            <span class="source-badge"></span>
+          </div>
+          <h3><a target="_blank" rel="noreferrer"></a></h3>
+          <p class="authors"></p>
+          <p class="abstract"></p>
+          <div class="tag-row"></div>
+        </article>
+      </template>
+    </main>
+
+    <footer class="footer">
+      <span>Data: choucisan/CVpaper, arXiv cs.CV API, OpenAlex.</span>
+      <span>Built for CV MoE, routing, and expert-system literature scouting.</span>
+    </footer>
+
+    <script src="assets/app.js"></script>
+  </body>
+</html>
