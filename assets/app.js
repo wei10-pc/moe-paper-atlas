@@ -172,8 +172,11 @@ function renderPaper(paper, index) {
   enTitle.textContent = paper.title || "Untitled";
   zhTitle.textContent = paper.title_zh || "中文标题待生成";
   authors.textContent = paper.authors || "Authors unavailable";
-  original.textContent = paper.abstract || "Abstract unavailable.";
-  translated.textContent = paper.abstract_zh || "中文摘要待生成。";
+  const isTitleOnly = (paper.tags || []).includes("title_only") || !paper.abstract;
+  original.textContent = paper.abstract || "No abstract was available in this source. This paper was collected because its title matches MoE, routing, gating, or expert-system terms.";
+  translated.textContent = paper.abstract_zh || (isTitleOnly
+    ? "该来源没有摘要；本条因标题命中 MoE、routing、gating 或 expert-system 等关键词被收录。"
+    : "中文摘要待生成。");
 
   (paper.tags || []).forEach((tag) => {
     tags.appendChild(makeTextElement("span", "tag", tagLabel(tag)));

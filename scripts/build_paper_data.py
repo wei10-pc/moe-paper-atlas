@@ -27,11 +27,15 @@ HTML_DIR = CVPAPER_ROOT / "html"
 OUT_JSON = ROOT / "data" / "papers.json"
 OUT_SUMMARY = ROOT / "data" / "summary.json"
 CVPR2026_JSONL = CLIP_ROOT / "MoE-PCQA" / "external" / "cvpr2026_moe" / "cvpr_papers.jsonl"
+MARTEN_ML_CSV_URL = "https://raw.githubusercontent.com/martenlienen/icml-neurips-iclr-dataset/master/papers.csv"
+ICML2026_TXT_URL = "https://raw.githubusercontent.com/hydrogenhy/AI_conference_paperlist/main/paper/icml_2026_paper.txt"
+ICLR2026_ALICK_JSON_URL = "https://raw.githubusercontent.com/alickzhu/iclr2026-papers/master/data.json"
 
 STRICT_PATTERNS = [
     r"\bmoe\b",
     r"\bmixture[- ]of[- ]experts?\b",
     r"\bmixtures[- ]of[- ]experts?\b",
+    r"\bexperts?\s+mixtures?\b",
     r"\bmixture[- ]of[- ]vision[- ]experts?\b",
     r"\bmixture[- ]of[- ]biometric[- ]experts?\b",
 ]
@@ -172,6 +176,83 @@ def classify_relevance(title: str, abstract: str) -> tuple[str | None, list[str]
     if adjacent:
         return "adjacent_expert_routing", adjacent
     return None, []
+
+
+def classify_title_relevance(title: str) -> tuple[str | None, list[str]]:
+    tier, tags = classify_relevance(title, "")
+    if not tier:
+        return None, []
+    return tier, sorted(set(tags) | {"title_hit"})
+
+
+def title_key(title: str) -> str:
+    return clean_text(title).lower()
+
+
+def bounded_authors(authors: list[str] | str, limit: int = 12) -> str:
+    if isinstance(authors, str):
+        items = re.split(r"\s*[;,·]\s*|\s+\|\s+", authors)
+    else:
+        items = authors
+    cleaned = []
+    seen = set()
+    for item in items:
+        name = clean_text(item)
+        if not name or name.lower() in seen:
+            continue
+        cleaned.append(name)
+        seen.add(name.lower())
+        if len(cleaned) >= limit:
+            break
+    suffix = " et al." if len(seen) >= limit else ""
+    return ", ".join(cleaned) + suffix
+
+
+def make_paper_record(
+    *,
+    source_id: str,
+    title: str,
+    authors: str = "",
+    abstract: str = "",
+    venue: str = "",
+    year: int | str = 0,
+    url: str = "",
+    source: str = "",
+    tags: list[str] | None = None,
+    link_confidence: float = 0.0,
+    extra: dict | None = None,
+) -> dict:
+    title = clean_text(title)
+    abstract = clean_text(abstract)
+    tier, inferred_tags = classify_title_relevance(title)
+    if not tier:
+        tier, inferred_tags = classify_relevance(title, abstract)
+    merged_tags = sorted(set(inferred_tags) | set(tags or []))
+    if not abstract:
+        merged_tags = sorted(set(merged_tags) | {"title_only"})
+    try:
+        year_int = int(year) if year else 0
+    except (TypeError, ValueError):
+        year_int = 0
+    record = {
+        "id": source_id,
+        "title": title,
+        "authors": clean_text(authors),
+        "abstract": abstract,
+        "venue": clean_text(venue) or "Unknown venue",
+        "year": year_int,
+        "url": clean_text(url) or scholar_url(title),
+        "source": source,
+        "tier": tier or "adjacent_expert_routing",
+        "tags": merged_tags,
+        "link_confidence": link_confidence,
+        "cv_domain_score": cv_domain_score(title, abstract),
+        "strong_cv_domain_score": strong_cv_domain_score(title, abstract),
+        "visual_evidence_score": visual_evidence_score(title, abstract),
+    }
+    if extra:
+        record.update(extra)
+    return record
 
 
 def parse_author_field(authors: str) -> tuple[str, str, str]:
@@ -408,22 +489,34 @@ def build_from_cvpr2026_jsonl(existing_titles: set[str]) -> list[dict]:
     return papers
 
 
-def request_json(url: str, timeout: int = 20) -> dict | None:
+def request_json(url: str, timeout: int = 20, attempts: int = 2) -> dict | list | None:
     req = urllib.request.Request(url, headers={"User-Agent": "moe-paper-atlas/1.0"})
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except Exception:
-        return None
+    last_error = None
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except Exception as exc:
+            last_error = exc
+            if attempt + 1 < attempts:
+                time.sleep(0.5)
+    print(f"Skipping JSON source {url}: {last_error}")
+    return None
 
 
-def request_text(url: str, timeout: int = 20) -> str | None:
+def request_text(url: str, timeout: int = 20, attempts: int = 2) -> str | None:
     req = urllib.request.Request(url, headers={"User-Agent": "moe-paper-atlas/1.0"})
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return resp.read().decode("utf-8", errors="replace")
-    except Exception:
-        return None
+    last_error = None
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return resp.read().decode("utf-8", errors="replace")
+        except Exception as exc:
+            last_error = exc
+            if attempt + 1 < attempts:
+                time.sleep(0.5)
+    print(f"Skipping text source {url}: {last_error}")
+    return None
 
 
 def abstract_from_openalex(inv: dict | None) -> str:
@@ -624,6 +717,146 @@ def add_known_recent_cv_extras(existing_titles: set[str]) -> list[dict]:
     return papers
 
 
+def fetch_marten_ml_title_hits(existing_titles: set[str]) -> list[dict]:
+    """Load ICML/NeurIPS/ICLR 2006-2024 title-only records.
+
+    This source has no abstracts or paper links. It is intentionally limited to
+    title hits so the atlas can retain useful MoE/routing titles without
+    pretending to have evidence from the abstract.
+    """
+    try:
+        df = pd.read_csv(MARTEN_ML_CSV_URL)
+    except Exception as exc:
+        print(f"Skipping marten ML title index: {exc}")
+        return []
+
+    papers = []
+    grouped = df.groupby(["Conference", "Year", "Title"], dropna=False)["Author"].apply(list).reset_index()
+    for idx, row in grouped.iterrows():
+        title = clean_text(row.get("Title", ""))
+        key = title_key(title)
+        if not title or key in existing_titles:
+            continue
+
+        tier, tags = classify_title_relevance(title)
+        if not tier:
+            continue
+
+        papers.append(make_paper_record(
+            source_id=f"ml-title-{idx}",
+            title=title,
+            authors=bounded_authors(row.get("Author", [])),
+            abstract="",
+            venue=clean_text(row.get("Conference", "")),
+            year=row.get("Year", 0),
+            url=scholar_url(title),
+            source="martenlienen ICML/NeurIPS/ICLR title index",
+            tags=sorted(set(tags) | {"ml_conference", "title_only"}),
+            link_confidence=0.2,
+        ))
+        existing_titles.add(key)
+    return papers
+
+
+def parse_labeled_record(block: str) -> dict[str, str]:
+    labels = ["ID", "Title", "Link", "Authors", "Abstract"]
+    values = {}
+    for idx, label in enumerate(labels):
+        next_labels = "|".join(re.escape(item) for item in labels[idx + 1:])
+        if next_labels:
+            pattern = rf"{label}:\s*(.*?)(?=\n(?:{next_labels}):|\Z)"
+        else:
+            pattern = rf"{label}:\s*(.*)"
+        match = re.search(pattern, block, re.S)
+        values[label.lower()] = clean_text(match.group(1)) if match else ""
+    return values
+
+
+def fetch_icml2026_title_hits(existing_titles: set[str]) -> list[dict]:
+    text = request_text(ICML2026_TXT_URL, timeout=35)
+    if not text:
+        return []
+
+    papers = []
+    blocks = re.split(r"\r?\n-{20,}\r?\n", text)
+    for index, block in enumerate(blocks):
+        if "Title:" not in block:
+            continue
+        item = parse_labeled_record(block)
+        title = item.get("title", "")
+        key = title_key(title)
+        if not title or key in existing_titles:
+            continue
+
+        tier, tags = classify_title_relevance(title)
+        if not tier:
+            continue
+
+        papers.append(make_paper_record(
+            source_id=f"icml2026-title-{item.get('id') or index}",
+            title=title,
+            authors=item.get("authors", ""),
+            abstract=item.get("abstract", ""),
+            venue="ICML",
+            year=2026,
+            url=item.get("link", "") or scholar_url(title),
+            source="hydrogenhy ICML2026 paperlist",
+            tags=sorted(set(tags) | {"ml_conference", "title_hit"}),
+            link_confidence=0.7 if item.get("link") else 0.2,
+        ))
+        existing_titles.add(key)
+    return papers
+
+
+def fetch_iclr2026_title_hits(existing_titles: set[str]) -> list[dict]:
+    data = request_json(ICLR2026_ALICK_JSON_URL, timeout=90, attempts=3)
+    if not isinstance(data, list):
+        return []
+
+    papers = []
+    for cat_index, category in enumerate(data):
+        category_name = clean_text(category.get("name", ""))
+        for paper_index, item in enumerate(category.get("papers", []) or []):
+            title = clean_text(item.get("title", ""))
+            key = title_key(title)
+            if not title or key in existing_titles:
+                continue
+
+            tier, tags = classify_title_relevance(title)
+            if not tier:
+                continue
+
+            extra_tags = {"ml_conference", "title_hit"}
+            if category_name:
+                extra_tags.add(category_name)
+            keywords = item.get("keywords") or []
+            if isinstance(keywords, str):
+                extra_tags.add(clean_text(keywords))
+            else:
+                extra_tags.update(clean_text(keyword) for keyword in keywords if clean_text(keyword))
+
+            papers.append(make_paper_record(
+                source_id=f"iclr2026-title-{cat_index}-{paper_index}",
+                title=title,
+                authors="",
+                abstract=item.get("abstract", ""),
+                venue="ICLR",
+                year=2026,
+                url=item.get("url", "") or scholar_url(title),
+                source="alickzhu ICLR2026 paper categories",
+                tags=sorted(extra_tags | set(tags)),
+                link_confidence=0.8 if item.get("url") else 0.2,
+                extra={
+                    "primary_area": clean_text(item.get("primary_area", "")),
+                    "rating": item.get("rating", ""),
+                    "confidence": item.get("confidence", ""),
+                    "explain_zh": clean_text(item.get("explain_zh", "")),
+                },
+            ))
+            existing_titles.add(key)
+    return papers
+
+
 def summarize(papers: list[dict]) -> dict:
     by_year = Counter(str(p["year"] or "Unknown") for p in papers)
     by_venue = Counter(p["venue"] for p in papers)
@@ -655,6 +888,21 @@ def summarize(papers: list[dict]) -> dict:
                 "url": "https://openalex.org/",
                 "coverage": "Conservative CV-filtered strict MoE keyword expansion",
             },
+            {
+                "name": "martenlienen ICML/NeurIPS/ICLR title index",
+                "url": "https://github.com/martenlienen/icml-neurips-iclr-dataset",
+                "coverage": "Title-only ICML/NeurIPS/ICLR 2006-2024 records; MoE/routing title hits only",
+            },
+            {
+                "name": "hydrogenhy ICML2026 paperlist",
+                "url": "https://github.com/hydrogenhy/AI_conference_paperlist",
+                "coverage": "ICML 2026 title, author, link, and abstract records; title hits only",
+            },
+            {
+                "name": "alickzhu ICLR2026 paper categories",
+                "url": "https://github.com/alickzhu/iclr2026-papers",
+                "coverage": "ICLR 2026 categorized papers with abstracts; title hits only",
+            },
         ],
     }
 
@@ -671,6 +919,9 @@ def main() -> None:
     papers.extend(fetch_arxiv_extras(existing_titles))
     papers.extend(fetch_openalex_extras(existing_titles))
     papers.extend(add_known_recent_cv_extras(existing_titles))
+    papers.extend(fetch_marten_ml_title_hits(existing_titles))
+    papers.extend(fetch_icml2026_title_hits(existing_titles))
+    papers.extend(fetch_iclr2026_title_hits(existing_titles))
 
     papers.sort(key=lambda p: (p["year"] or 0, p["tier"] == "strict_moe", p["title"].lower()), reverse=True)
     summary = summarize(papers)

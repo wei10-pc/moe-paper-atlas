@@ -1,34 +1,43 @@
 {
-  "generated_at": "2026-06-06T15:45:13.378399+00:00",
-  "total": 1316,
+  "generated_at": "2026-06-07T02:24:23.381056+00:00",
+  "total": 1752,
   "by_year": {
     "Unknown": 148,
-    "2026": 404,
-    "2025": 183,
-    "2024": 98,
-    "2023": 122,
-    "2022": 55,
-    "2021": 87,
-    "2020": 42,
-    "2019": 68,
-    "2018": 47,
-    "2017": 26,
-    "2016": 8,
-    "2015": 13,
-    "2014": 6,
-    "2013": 9
+    "2026": 594,
+    "2025": 156,
+    "2024": 199,
+    "2023": 163,
+    "2022": 96,
+    "2021": 107,
+    "2020": 59,
+    "2019": 83,
+    "2018": 61,
+    "2017": 39,
+    "2016": 9,
+    "2015": 14,
+    "2014": 7,
+    "2013": 10,
+    "2012": 1,
+    "2011": 1,
+    "2010": 2,
+    "2009": 1,
+    "2008": 1,
+    "2007": 1
   },
   "by_venue": {
     "CVPR": 783,
-    "arXiv cs.CV": 153,
+    "ICML": 250,
+    "NeurIPS": 168,
     "ICCV": 152,
     "CVPR/ICCV/ECCV": 148,
+    "ICLR": 124,
+    "arXiv cs.CV": 43,
+    "arXiv (Cornell University)": 16,
     "ECCV": 16,
-    "arXiv (Cornell University)": 14,
     "OpenAlex CV-related": 10,
     "Proceedings of the AAAI Conference on Artificial Intelligence": 9,
-    "IEEE Transactions on Image Processing": 3,
-    "ArXiv.org": 2,
+    "IEEE Transactions on Image Processing": 4,
+    "ArXiv.org": 3,
     "IEEE Transactions on Circuits and Systems for Video Technology": 2,
     "Neurocomputing": 2,
     "IEEE Access": 2,
@@ -54,8 +63,8 @@
     "IEEE Signal Processing Letters": 1
   },
   "by_tier": {
-    "strict_moe": 310,
-    "adjacent_expert_routing": 1006
+    "strict_moe": 425,
+    "adjacent_expert_routing": 1327
   },
   "sources": [
     {
@@ -77,17 +86,32 @@
       "name": "OpenAlex",
       "url": "https://openalex.org/",
       "coverage": "Conservative CV-filtered strict MoE keyword expansion"
+    },
+    {
+      "name": "martenlienen ICML/NeurIPS/ICLR title index",
+      "url": "https://github.com/martenlienen/icml-neurips-iclr-dataset",
+      "coverage": "Title-only ICML/NeurIPS/ICLR 2006-2024 records; MoE/routing title hits only"
+    },
+    {
+      "name": "hydrogenhy ICML2026 paperlist",
+      "url": "https://github.com/hydrogenhy/AI_conference_paperlist",
+      "coverage": "ICML 2026 title, author, link, and abstract records; title hits only"
+    },
+    {
+      "name": "alickzhu ICLR2026 paper categories",
+      "url": "https://github.com/alickzhu/iclr2026-papers",
+      "coverage": "ICLR 2026 categorized papers with abstracts; title hits only"
     }
   ],
   "translation": {
     "target": "zh-CN",
     "engine": "Helsinki-NLP/opus-mt-en-zh",
     "device": "cuda",
-    "translated_papers": 1316,
+    "translated_papers": 1752,
     "missing_translation_papers": 0,
     "postprocess": {
       "term_replacements": 39,
-      "changed_fields": 13
+      "changed_fields": 699
     }
   }
 }
